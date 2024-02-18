@@ -10,7 +10,7 @@ MAKEFLAGS += --silent
 AS=nasm							# Assembler
 ASFLAGS=-f elf64 -g -F dwarf	# Assembler flags
 LD=ld							# Linker
-LDFLAGS=''  					# Linker flags
+#LDFLAGS=''  					# Linker flags
 SOURCES=$(wildcard *.asm)		# Source files
 OBJECTS=$(SOURCES:.asm=.o) 		# Object files
 EXECUTABLE=numbers				# Program name
