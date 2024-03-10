@@ -4,7 +4,7 @@
 global _start
 global input:data
 
-EXTERN printHex, printBinary
+EXTERN printHex, printBinary, printDecimal, clearBuff
 EXTERN readStdinTermios, writeStdinTermios, canonicalOn, canonicalOff, echoOn, echoOff
 
 SECTION .data               ; Initialized data
@@ -62,7 +62,10 @@ prompt:
     je exit
 
     call printHex
+    call clearBuff
     call printBinary
+    call clearBuff
+    call printDecimal
     call printNewLine
     
     call printNewLine

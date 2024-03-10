@@ -1,6 +1,6 @@
 ; File printValue.asm
 
-GLOBAL printHex, printBinary
+GLOBAL printHex, printBinary, printDecimal, clearBuff
 EXTERN input
 
 section .data
@@ -9,6 +9,8 @@ section .data
     outputBinMsgLength equ $ - outputBinMsg
     outputHexMsg db " Hex: "
     outputHexMsgLength equ $ - outputHexMsg
+    outputDecMsg db " Dec: "
+    outputDecMsgLength equ $ - outputDecMsg
     hexTable db "0123456789ABCDEF"
 
     STDIN        equ    0
@@ -21,7 +23,7 @@ section .data
 
 section .bss
 
-    buff resb 8
+    buff resb 20
     buffLength equ $ - buff
 
 section .text
@@ -83,3 +85,56 @@ printHex:
     mov rdx, 2                      ; store message length
     syscall                         ; make the syscall    
     ret
+
+printDecimal:                       ; https://codereview.stackexchange.com/questions/283090/print-decimal-integer
+    mov rax, SYS_write              ; select 'write' syscall
+    mov rdi, STDOUT                 ; use stdout
+    mov rsi, outputDecMsg           ; buffer is message
+    mov rdx, outputDecMsgLength     ; store message length
+    syscall                         ; make the syscall
+debug:
+
+    mov rcx, 10                     ; we are going to divide by 10
+    mov rdi, buff + 19              ; buff to store the ascii output, in reverse order
+    movzx rax, byte [input]          ; put the input into rax
+
+.loop:
+    xor rdx, rdx                    ; zero rdx
+    div rcx                         ; unsigned divide rdx:rax by rcx
+                                    ; rax := quotient, rdx := remainder
+    add rdx, '0'                    ; convert remainder to ascii digit
+    mov byte [rdi], dl              ; and store it
+    dec rdi
+    cmp rax, 0
+    jne .loop                        ; do while (rax != 0)
+
+.output:
+    mov rax, SYS_write              ; select 'write' syscall
+    mov rdi, STDOUT                 ; use stdout
+    mov rsi, buff                   ; buffer is message
+    mov rdx, 20                     ; store message length
+    syscall                         ; make the syscall
+    ret
+
+; clear the buff to zeros
+clearBuff:
+    push rax                        ; save registers
+    push rcx
+    push rdi
+
+    cld                             ; clear DF; count up-memory
+    mov al, 0                       ; byte to store
+    mov rdi, buff                   ; destination index = buff address
+    mov rcx, buffLength             ; count of chars to store
+    rep stosb                       ; blast byte length chars at buff
+
+    pop rdi                         ; restore registers
+    pop rcx
+    pop rax
+    ret                             ; return
+; Old way
+;     mov rdi, buffLength
+; .loop:
+;     mov byte [buff  + rdi], 0
+;     dec rdi
+;     jnz .loop
